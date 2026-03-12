@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการรับสมัครสภานักเรียน - Admin</title>
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Anuphan', 'sans-serif'] } } } }
+    </script>
+    <style>
+        body { font-family: 'Anuphan', sans-serif; background: linear-gradient(135deg, #f3e8ff 0%, #fffbeb 100%); min-height: 100vh; background-attachment: fixed; }
+        .glass-card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 10px 30px rgba(103, 58, 183, 0.08); }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <nav class="glass-card sticky top-0 z-50 border-b border-white/40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png" alt="Logo" class="h-10 w-10 drop-shadow-md">
+                <h1 class="text-lg font-bold text-purple-800">Dashboard จัดการรับสมัครสภานักเรียน</h1>
+            </div>
+            <button onclick="loadData()" class="bg-white/50 hover:bg-white text-purple-700 px-5 py-2 rounded-full text-sm font-bold border border-purple-200 transition-all flex items-center gap-2 shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                รีเฟรชตาราง
+            </button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4 mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <div class="lg:col-span-1 space-y-6">
+            <div class="glass-card p-5 rounded-2xl">
+                <h2 class="font-bold text-purple-800 border-b border-purple-100 pb-2 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    ตั้งค่าระบบ
+                </h2>
+                
+                <label class="block text-[11px] font-bold text-gray-700 mb-1">สถานะรับสมัคร (หน้าแรก)</label>
+                <select id="systemStatusSelect" class="w-full bg-white/60 border border-purple-100 rounded-lg p-2 text-sm mb-3 focus:ring-2 focus:ring-purple-400 outline-none">
+                    <option value="open">เปิดรับสมัคร</option>
+                    <option value="closed">ปิดรับสมัคร</option>
+                </select>
+                
+                <label class="block text-[11px] font-bold text-gray-700 mb-1">ปีการศึกษา</label>
+                <input type="number" id="academicYearInput" class="w-full bg-white/60 border border-purple-100 rounded-lg p-2 text-sm mb-4 focus:ring-2 focus:ring-purple-400 outline-none">
+                
+                <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 mb-4">
+                    <label class="block text-[11px] font-bold text-purple-800 mb-1">เวลาเริ่มให้ยืนยันสิทธิ์</label>
+                    <input type="datetime-local" id="confirmStartTimeInput" class="w-full bg-white border border-purple-200 rounded-md p-1.5 text-xs mb-2">
+                    
+                    <label class="block text-[11px] font-bold text-red-700 mb-1">เวลาปิดระบบยืนยันสิทธิ์ (สละสิทธิ์ออโต้)</label>
+                    <input type="datetime-local" id="confirmEndTimeInput" class="w-full bg-white border border-red-200 rounded-md p-1.5 text-xs mb-2">
+
+                    <label class="block text-[11px] font-bold text-blue-700 mb-1">เวลาประกาศคิวสัมภาษณ์</label>
+                    <input type="datetime-local" id="interviewAnnounceTimeInput" class="w-full bg-white border border-blue-200 rounded-md p-1.5 text-xs">
+                </div>
+
+                <button onclick="saveSettings()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl text-sm font-bold shadow-md hover:shadow-purple-500/30 transition-all">บันทึกการตั้งค่า</button>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl">
+                <h2 class="font-bold text-yellow-700 border-b border-yellow-200 pb-2 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    ฐานข้อมูล ม.4
+                </h2>
+                <div id="lastUpdatedText" class="text-[11px] text-gray-700 bg-white/60 p-2.5 rounded-xl mb-4 border border-yellow-200">กำลังตรวจสอบ...</div>
+                <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="w-full bg-white/60 border border-yellow-200 rounded-xl p-1.5 text-xs mb-2">
+                <p class="text-[10px] text-gray-500 mb-4">* แผ่นงานต้องชื่อ "m.4" หรือ "ม.4"</p>
+                <button id="importStudentsBtn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-purple-900 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all mb-2">นำเข้า/อัปเดตรายชื่อ</button>
+                <button onclick="deleteStudents()" class="w-full bg-white/50 border border-red-200 hover:bg-red-50 text-red-600 py-2 rounded-xl text-xs font-bold transition-all">ล้างข้อมูลทั้งหมด</button>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 glass-card rounded-2xl overflow-hidden flex flex-col shadow-lg">
+            <div class="p-4 border-b border-white/40 bg-white/30 flex flex-col md:flex-row gap-4 justify-between items-center backdrop-blur-sm">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <span class="text-sm font-bold text-purple-800">ตัวกรอง:</span>
+                    <select id="filterRole" class="bg-white/70 border border-purple-100 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-purple-400 outline-none w-full md:w-auto shadow-sm" onchange="renderTable()">
+                        <option value="all">ดูทั้งหมดทุกตำแหน่ง</option>
+                        <option value="ประธานนักเรียน">เฉพาะประธานนักเรียน</option>
+                        <option value="กรรมการนักเรียน">เฉพาะกรรมการนักเรียน</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-80 relative">
+                    <svg class="w-5 h-5 absolute left-3 top-2.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="searchInput" placeholder="ค้นหารหัส, ชื่อ, เลขใบสมัคร..." class="w-full bg-white/70 border border-purple-100 rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-purple-400 outline-none shadow-sm" onkeyup="renderTable()">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto p-4">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead class="text-purple-900 bg-purple-100/50 backdrop-blur-md">
+                        <tr>
+                            <th class="p-4 font-bold rounded-tl-xl">ข้อมูลใบสมัคร</th>
+                            <th class="p-4 font-bold">ชื่อ-สกุล</th>
+                            <th class="p-4 font-bold">ตำแหน่ง (พรรค)</th>
+                            <th class="p-4 font-bold text-center">อัปเดตสถานะ</th>
+                            <th class="p-4 font-bold text-center rounded-tr-xl">เอกสาร</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody" class="divide-y divide-purple-50/50">
+                        <tr><td colspan="5" class="text-center py-12 text-purple-600 animate-pulse font-bold">กำลังโหลดข้อมูล...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ ลิงก์ Web App
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzgZ75s7SMTRbPx5Cq_iHKgS9qhDq1CiZwyLurGDuoyRFzXPdT-ppCTPF12PIPHNFxYTw/exec";
+
+        let allApplications = []; 
+
+        async function loadData() {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-purple-600 animate-pulse font-bold">กำลังเชื่อมต่อฐานข้อมูล...</td></tr>';
+            try {
+                const response = await fetch(WEB_APP_URL, { 
+                    method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    body: JSON.stringify({ action: "getAdminData" }) 
+                });
+                const textResult = await response.text();
+                
+                try {
+                    const result = JSON.parse(textResult);
+                    if (result.status === 'success') {
+                        document.getElementById('systemStatusSelect').value = result.settings.SystemStatus || 'open';
+                        document.getElementById('academicYearInput').value = result.settings.CurrentAcademicYear || '';
+                        document.getElementById('confirmStartTimeInput').value = result.settings.ConfirmStartTime || '';
+                        document.getElementById('confirmEndTimeInput').value = result.settings.ConfirmEndTime || '';
+                        document.getElementById('interviewAnnounceTimeInput').value = result.settings.InterviewAnnounceTime || '';
+                        document.getElementById('lastUpdatedText').innerHTML = `อัปเดตล่าสุด: <br><span class="font-bold text-yellow-700">${result.settings.LastUpdatedM4}</span>`;
+                        allApplications = result.data;
+                        renderTable();
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-500">Error: ${result.message}</td></tr>`;
+                    }
+                } catch (e) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-600 font-bold">ติดสิทธิ์ความปลอดภัย (โดนบล็อก)</td></tr>`;
+                }
+            } catch (error) { 
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-500">ไม่สามารถติดต่อเซิร์ฟเวอร์ได้</td></tr>`; 
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('adminTableBody');
+            const filterRole = document.getElementById('filterRole').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            let filteredData = allApplications;
+            if (filterRole !== 'all') filteredData = filteredData.filter(app => app.position === filterRole);
+            if (searchTerm !== '') {
+                filteredData = filteredData.filter(app => {
+                    return (app.studentId||'').toString().includes(searchTerm) || 
+                           (app.name||'').toLowerCase().includes(searchTerm) || 
+                           (app.party||'').toLowerCase().includes(searchTerm) || 
+                           (app.appNumber||'').toLowerCase().includes(searchTerm);
+                });
+            }
+
+            tbody.innerHTML = '';
+            if (filteredData.length === 0) { 
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-gray-500 font-medium">ไม่พบรายชื่อผู้สมัคร</td></tr>'; return; 
+            }
+
+            filteredData.forEach(app => {
+                const dateObj = new Date(app.Timestamp);
+                let timeStr = dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                let dateStr = dateObj.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+                
+                let currentStatus = app.status || '';
+                let statusColor = 'text-yellow-700 bg-yellow-50 border-yellow-200'; 
+                
+                if (currentStatus.includes('เรียบร้อย') || currentStatus.includes('ยืนยันสมัครต่อ')) {
+                    statusColor = currentStatus.includes('ไม่เรียบร้อย') ? 'text-red-600 bg-red-50 border-red-200' : 'text-green-700 bg-green-50 border-green-200';
+                } else if (currentStatus.includes('พิมพ์ใบสมัครแล้ว')) {
+                    statusColor = 'text-blue-700 bg-blue-50 border-blue-200'; 
+                } else if (currentStatus.includes('หมดเวลา') || currentStatus.includes('สละสิทธิ์')) {
+                    statusColor = 'text-gray-600 bg-gray-100 border-gray-300'; 
+                }
+
+                // แสดงป้ายคิวสัมภาษณ์ ถ้ามีการยืนยันสมัครต่อ
+                let queueBadge = app.queueNumber && currentStatus === 'ยืนยันสมัครต่อ' 
+                    ? `<div class="mt-1.5 inline-block bg-blue-100 text-blue-800 border border-blue-200 text-[11px] px-2 py-0.5 rounded-md font-bold shadow-sm">🎯 คิวสัมภาษณ์: ${app.queueNumber}</div>` : '';
+
+                const imgBtn = app.photoUrl ? `<a href="${app.photoUrl}" target="_blank" class="w-full flex justify-center items-center gap-1 text-[11px] bg-white text-purple-600 hover:bg-purple-50 px-2 py-1.5 rounded-lg border border-purple-200 mb-1.5 font-bold shadow-sm transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> รูปถ่าย</a>` : ``;
+                const pdfBtn = app.pdfLink ? `<a href="${app.pdfLink}" target="_blank" class="w-full flex justify-center items-center gap-1 text-xs bg-purple-600 hover:bg-purple-700 text-white px-2 py-1.5 rounded-lg font-bold shadow-sm transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg> PDF</a>` : `<span class="text-[10px] text-gray-400 block text-center border border-dashed border-gray-300 p-1.5 rounded-lg bg-gray-50/50">รอเอกสาร</span>`;
+                let badgeRole = app.position === 'ประธานนักเรียน' ? 'bg-purple-100 text-purple-800 border-purple-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-white/50 border-b border-purple-50/50 transition-colors">
+                        <td class="p-4">
+                            <span class="font-bold text-purple-700 text-base font-mono tracking-tight bg-white/60 px-2 py-0.5 rounded-md border border-purple-100">${app.appNumber}</span><br>
+                            <span class="text-[11px] text-gray-500 mt-1 block">${dateStr} • ${timeStr} น.</span>
+                            ${queueBadge}
+                        </td>
+                        <td class="p-4">
+                            <span class="font-bold text-gray-800 text-base">${app.studentId}</span><br>
+                            <span class="text-sm">${app.name}</span> <span class="text-xs text-purple-600 font-bold ml-1 bg-purple-50 px-1.5 rounded">(ม.4/${app.room})</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="text-xs font-bold px-2 py-0.5 rounded-md mb-1 inline-block border ${badgeRole}">${app.position}</span><br>
+                            <span class="text-sm font-medium text-gray-600">พรรค: ${app.party}</span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <select onchange="updateStatus('${app.sheet}', ${app.rowIndex}, this.value)" class="bg-white/80 border rounded-xl p-2 text-[11px] cursor-pointer font-bold w-full outline-none shadow-sm transition-all focus:ring-2 focus:ring-purple-400 ${statusColor}">
+                                <option value="รอตรวจสอบ" ${currentStatus === 'รอตรวจสอบ' ? 'selected' : ''}>⏳ รอตรวจสอบ</option>
+                                <option value="รอส่งใบสมัคร" ${currentStatus === 'รอส่งใบสมัคร' ? 'selected' : ''}>⏳ รอส่งใบสมัคร</option>
+                                <option value="พิมพ์ใบสมัครแล้ว (ให้มารับใบสมัครที่ห้องสภา) / รอส่งใบสมัคร" ${currentStatus === 'พิมพ์ใบสมัครแล้ว (ให้มารับใบสมัครที่ห้องสภา) / รอส่งใบสมัคร' ? 'selected' : ''}>🖨️ พิมพ์ใบสมัครแล้ว (รอส่ง)</option>
+                                <option value="ส่งใบสมัครเรียบร้อย" ${currentStatus === 'ส่งใบสมัครเรียบร้อย' ? 'selected' : ''}>✅ ส่งใบสมัครเรียบร้อย</option>
+                                <option value="ยืนยันสมัครต่อ" ${currentStatus === 'ยืนยันสมัครต่อ' ? 'selected' : ''}>✅ ยืนยันสมัครต่อ</option>
+                                <option value="เอกสารไม่เรียบร้อย (ไม่ได้แนบผลการเรียน)" ${currentStatus === 'เอกสารไม่เรียบร้อย (ไม่ได้แนบผลการเรียน)' ? 'selected' : ''}>❌ เอกสารไม่เรียบร้อย (ผลการเรียน)</option>
+                                <option value="เอกสารไม่เรียบร้อย (ไม่มีความคิดเห็นของหัวหน้าระดับ)" ${currentStatus === 'เอกสารไม่เรียบร้อย (ไม่มีความคิดเห็นของหัวหน้าระดับ)' ? 'selected' : ''}>❌ เอกสารไม่เรียบร้อย (ความเห็นครู)</option>
+                                <option value="หมดเวลาส่งใบสมัคร" ${currentStatus === 'หมดเวลาส่งใบสมัคร' ? 'selected' : ''}>⛔ หมดเวลาส่งใบสมัคร</option>
+                                <option value="สละสิทธิ์การสมัคร" ${currentStatus === 'สละสิทธิ์การสมัคร' ? 'selected' : ''}>🛑 สละสิทธิ์การสมัคร</option>
+                                <option value="สละสิทธิ์อัตโนมัติ" ${currentStatus === 'สละสิทธิ์อัตโนมัติ' ? 'selected' : ''}>🛑 สละสิทธิ์อัตโนมัติ</option>
+                            </select>
+                        </td>
+                        <td class="p-4 w-28">${imgBtn}${pdfBtn}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function updateStatus(sheetName, rowIndex, newStatus) {
+            Swal.fire({ toast:true, position: 'top-end', title: 'กำลังบันทึก...', showConfirmButton: false, didOpen: () => { Swal.showLoading() } });
+            await fetch(WEB_APP_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "updateStatus", sheet: sheetName, rowIndex: rowIndex, status: newStatus }) });
+            Swal.fire({ toast:true, position: 'top-end', icon: 'success', title: 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1000 }); loadData();
+        }
+
+        async function saveSettings() {
+            const stat = document.getElementById('systemStatusSelect').value;
+            const ay = document.getElementById('academicYearInput').value;
+            const startT = document.getElementById('confirmStartTimeInput').value;
+            const endT = document.getElementById('confirmEndTimeInput').value;
+            const annT = document.getElementById('interviewAnnounceTimeInput').value;
+            Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+            await fetch(WEB_APP_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "updateSettings", systemStatus: stat, academicYear: ay, confirmStartTime: startT, confirmEndTime: endT, interviewAnnounceTime: annT }) });
+            Swal.fire('สำเร็จ', 'บันทึกการตั้งค่าเรียบร้อย', 'success'); loadData();
+        }
+
+        document.getElementById("importStudentsBtn").addEventListener("click", async () => {
+            const fileInput = document.getElementById("excelFileInput");
+            if (fileInput.files.length === 0) return Swal.fire('ผิดพลาด', 'กรุณาเลือกไฟล์ Excel', 'warning');
+            Swal.fire({ title: 'กำลังอ่านไฟล์...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const targetSheetName = workbook.SheetNames.find(name => { let c = name.trim().toLowerCase(); return c === "m.4" || c === "ม.4"; });
+                    if (!targetSheetName) return Swal.fire('ไม่พบแผ่นงาน', 'ไม่มี Sheet "m.4" หรือ "ม.4"', 'error');
+
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[targetSheetName], { header: 1, defval: "" });
+                    let allStudents = []; let currentRoom = "ไม่ระบุ";
+                    for (let row of rows) {
+                        if (!row || row.length === 0) continue;
+                        let idIndex = row.findIndex(c => (typeof c === 'string' || typeof c === 'number') && /^\d{5}$/.test(c.toString().trim()));
+                        if (idIndex !== -1) {
+                            let studentId = row[idIndex].toString().trim();
+                            let fullName = `${row[idIndex + 1]||""}${row[idIndex + 2]||""} ${row[idIndex + 3]||""}`.trim();
+                            let rowRoom = row.find(c => typeof c === 'string' && c.match(/^ม\.\d\/\d+/));
+                            if (rowRoom) currentRoom = rowRoom.trim();
+                            if (studentId && fullName.length > 5) allStudents.push({ id: studentId, name: fullName, room: currentRoom });
+                        }
+                    }
+                    if (allStudents.length === 0) return Swal.fire('ผิดพลาด', 'ไม่พบรายชื่อ', 'error');
+                    Swal.fire({ title: 'กำลังบันทึก...', html: `พบรายชื่อ ม.4 จำนวน ${allStudents.length} คน`, allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+                    const response = await fetch(WEB_APP_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "uploadStudents", students: allStudents }) });
+                    const resData = await response.json();
+                    if(resData.status === 'success') { Swal.fire('สำเร็จ', `อัปเดต ${resData.count} คน เรียบร้อย`, 'success'); fileInput.value = ""; loadData(); }
+                } catch (err) { Swal.fire('ผิดพลาด', 'ไฟล์ไม่รองรับ', 'error'); }
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        });
+
+        async function deleteStudents() {
+            Swal.fire({ title: 'ล้างข้อมูล?', text: "รายชื่อ ม.4 จะถูกลบทั้งหมด", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบทิ้ง' }).then(async (r) => {
+                if(r.isConfirmed) {
+                    Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+                    await fetch(WEB_APP_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "deleteStudents" }) });
+                    Swal.fire('สำเร็จ', 'ล้างข้อมูลแล้ว', 'success'); loadData();
+                }
+            });
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
