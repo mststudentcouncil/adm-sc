@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Anuphan', 'sans-serif'] } } } }</script>
     <style>
         body { font-family: 'Anuphan', sans-serif; background: linear-gradient(135deg, #f3e8ff 0%, #fffbeb 100%); min-height: 100vh; background-attachment: fixed; }
@@ -21,131 +22,155 @@
         .stat-num { font-size: 1.8rem; font-weight: 800; line-height: 1; margin-top: 0.5rem; }
     </style>
 </head>
-<body class="text-gray-800 pb-10">
+<body class="text-gray-800 pb-10 relative">
 
-    <div id="loadingOverlay">
+    <div id="loadingOverlay" style="display: none;">
         <img src="https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png" class="pulse-anim w-24 mb-4 drop-shadow-lg">
         <div class="text-purple-700 font-bold text-lg pulse-anim">กำลังโหลดข้อมูลระบบ...</div>
     </div>
 
-    <nav class="glass-card sticky top-0 z-40 border-b border-white/40">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
-            <div class="flex items-center gap-3">
-                <img src="https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png" alt="Logo" class="h-10 w-10 drop-shadow-md">
-                <h1 class="text-lg font-bold text-purple-800">Dashboard จัดการรับสมัคร</h1>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="exportQueueToExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> โหลดคิวสัมภาษณ์
-                </button>
-                <button onclick="loadData()" class="bg-white/50 hover:bg-white text-purple-700 px-4 py-2 rounded-xl text-sm font-bold border border-purple-200 transition-all flex items-center gap-2 shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> รีเฟรช
-                </button>
+    <div id="adminLoginView" class="min-h-screen flex items-center justify-center p-4">
+        <div class="glass-card p-8 rounded-3xl shadow-xl w-full max-w-md text-center">
+            <img src="https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png" class="w-24 mx-auto mb-6">
+            <h2 class="text-2xl font-bold text-purple-900 mb-2">Admin Dashboard</h2>
+            <p class="text-red-500 font-bold text-sm mb-6 bg-red-50 py-2 rounded-lg border border-red-100">
+                ⚠️ สงวนสิทธิ์เฉพาะ <br>studentcouncil@mst.ac.th
+            </p>
+            
+            <div class="flex justify-center">
+                <div id="g_id_onload" data-client_id="151555458498-fjmti72kvokr5dh5mlsjqq7vugrduuef.apps.googleusercontent.com" data-callback="handleAdminLogin" data-auto_prompt="false"></div>
+                <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_blue" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <div class="max-w-7xl mx-auto p-4 mt-2">
-        <div class="glass-card p-4 rounded-2xl mb-6 shadow-sm">
-            <h3 class="font-bold text-purple-800 mb-3 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> สรุปสถิติผู้สมัคร
-            </h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                <div class="stat-box bg-purple-50 border-purple-200 text-purple-800"><div class="text-[11px] font-bold opacity-70">ยอดรวมทั้งหมด</div><div class="stat-num" id="stTotal">0</div></div>
-                <div class="stat-box bg-indigo-50 border-indigo-200 text-indigo-800"><div class="text-[11px] font-bold opacity-70">ประธาน / กรรมการ</div><div class="stat-num text-xl mt-2" id="stRole">0 / 0</div></div>
-                <div class="stat-box"><div class="text-[11px] font-bold text-gray-500">รอตรวจสอบ</div><div class="stat-num text-gray-700" id="stPending">0</div></div>
-                <div class="stat-box bg-red-50 border-red-200"><div class="text-[11px] font-bold text-red-600">เอกสารไม่เรียบร้อย</div><div class="stat-num text-red-700" id="stIncomplete">0</div></div>
-                <div class="stat-box bg-green-50 border-green-200"><div class="text-[11px] font-bold text-green-700">ส่งใบสมัครเรียบร้อย</div><div class="stat-num text-green-700" id="stSubmitted">0</div></div>
-                <div class="stat-box bg-blue-50 border-blue-200"><div class="text-[11px] font-bold text-blue-700">ยืนยันรับสัมภาษณ์</div><div class="stat-num text-blue-700" id="stConfirmed">0</div></div>
-                <div class="stat-box bg-gray-100 border-gray-300"><div class="text-[11px] font-bold text-gray-600">สละสิทธิ์/หมดเวลา</div><div class="stat-num text-gray-700" id="stWaived">0</div></div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div class="lg:col-span-1 space-y-6">
-                <div class="glass-card p-5 rounded-2xl">
-                    <h2 class="font-bold text-purple-800 border-b border-purple-100 pb-2 mb-4">การตั้งค่าทั่วไป</h2>
-                    
-                    <label class="block text-[11px] font-bold text-gray-700 mb-1">สถานะรับสมัครปัจจุบัน</label>
-                    <div id="liveStatusBadge" class="w-full bg-gray-100 border border-gray-300 text-gray-600 rounded-lg p-2.5 text-sm mb-4 font-bold text-center flex justify-center items-center gap-2">
-                        กำลังคำนวณสถานะ...
-                    </div>
-                    
-                    <label class="block text-[11px] font-bold text-gray-700 mb-1">ปีการศึกษา</label>
-                    <input type="number" id="academicYearInput" class="w-full bg-white/60 border border-purple-100 rounded-lg p-2 text-sm mb-4 outline-none">
-                    
-                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mb-4 shadow-inner">
-                        <label class="block text-[11px] font-bold text-gray-700 mb-1">เวลาเปิดรับสมัคร</label>
-                        <input type="datetime-local" id="appStartTimeInput" class="w-full bg-white border border-gray-300 rounded-md p-1.5 text-xs mb-2">
-                        <label class="block text-[11px] font-bold text-gray-700 mb-1">เวลาปิดรับสมัคร (ฟอร์มปิด + ตัดสิทธิ์อัตโนมัติ)</label>
-                        <input type="datetime-local" id="appEndTimeInput" class="w-full bg-white border border-gray-300 rounded-md p-1.5 text-xs">
-                    </div>
-
-                    <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 mb-4 shadow-inner">
-                        <label class="block text-[11px] font-bold text-purple-800 mb-1">เวลาเริ่มให้กดยืนยันสิทธิ์</label>
-                        <input type="datetime-local" id="confirmStartTimeInput" class="w-full bg-white border border-purple-200 rounded-md p-1.5 text-xs mb-2">
-                        <label class="block text-[11px] font-bold text-red-700 mb-1">เวลาปิดให้กดยืนยันสิทธิ์ (สละสิทธิ์ออโต้)</label>
-                        <input type="datetime-local" id="confirmEndTimeInput" class="w-full bg-white border border-red-200 rounded-md p-1.5 text-xs">
-                    </div>
-
-                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4 shadow-inner">
-                        <label class="block text-[11px] font-bold text-blue-800 mb-1">เวลาประกาศคิวสัมภาษณ์</label>
-                        <input type="datetime-local" id="interviewAnnounceTimeInput" class="w-full bg-white border border-blue-200 rounded-md p-1.5 text-xs mb-2">
-                        <label class="block text-[11px] font-bold text-blue-800 mb-1">เวลาเริ่มสัมภาษณ์</label>
-                        <input type="datetime-local" id="interviewStartTimeInput" class="w-full bg-white border border-blue-200 rounded-md p-1.5 text-xs mb-2">
-                        <label class="block text-[11px] font-bold text-blue-800 mb-1">สถานที่สัมภาษณ์</label>
-                        <input type="text" id="interviewLocationInput" placeholder="เช่น ห้องสภานักเรียน" class="w-full bg-white border border-blue-200 rounded-md p-1.5 text-xs mb-2">
-                        <label class="block text-[11px] font-bold text-blue-800 mb-1">ประกาศเพิ่มเติม</label>
-                        <textarea id="interviewNoteInput" placeholder="สิ่งที่ต้องเตรียมมา..." class="w-full bg-white border border-blue-200 rounded-md p-1.5 text-xs" rows="2"></textarea>
-                    </div>
-
-                    <div class="bg-green-50 p-3 rounded-lg border border-green-200 mb-4 shadow-inner">
-                        <label class="block text-[11px] font-bold text-green-800 mb-1">เวลาประกาศผลการคัดเลือก</label>
-                        <input type="datetime-local" id="resultAnnounceTimeInput" class="w-full bg-white border border-green-300 rounded-md p-1.5 text-xs">
-                    </div>
-
-                    <button onclick="saveSettings()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl text-sm font-bold shadow-md transition-all">บันทึกการตั้งค่าทั้งหมด</button>
+    <div id="adminDashboardView" style="display: none;">
+        <nav class="glass-card sticky top-0 z-40 border-b border-white/40">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+                <div class="flex items-center gap-3">
+                    <img src="https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png" alt="Logo" class="h-10 w-10 drop-shadow-md">
+                    <h1 class="text-lg font-bold text-purple-800">Dashboard จัดการรับสมัคร</h1>
                 </div>
-
-                <div class="glass-card p-5 rounded-2xl">
-                    <h2 class="font-bold text-yellow-700 border-b border-yellow-200 pb-2 mb-4">ฐานข้อมูล ม.4</h2>
-                    <div id="lastUpdatedText" class="text-[11px] text-gray-700 bg-white/60 p-2.5 rounded-xl mb-4 border border-yellow-200">กำลังตรวจสอบ...</div>
-                    <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="w-full bg-white/60 border border-yellow-200 rounded-xl p-1.5 text-xs mb-2">
-                    <button id="importStudentsBtn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-purple-900 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all mb-4">อัปเดตรายชื่อ ม.4</button>
-                    <button onclick="deleteStudents()" class="w-full bg-white/50 border border-red-200 hover:bg-red-50 text-red-600 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> ล้างข้อมูลนักเรียนเก่า
+                <div class="flex gap-2">
+                    <button onclick="exportQueueToExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> โหลดคิวสัมภาษณ์
+                    </button>
+                    <button onclick="loadData()" class="bg-white/50 hover:bg-white text-purple-700 px-4 py-2 rounded-xl text-sm font-bold border border-purple-200 transition-all flex items-center gap-2 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> รีเฟรช
+                    </button>
+                    <button onclick="logoutAdmin()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-bold border border-red-200 transition-all flex items-center gap-2">
+                        ออก
                     </button>
                 </div>
             </div>
+        </nav>
 
-            <div class="lg:col-span-3 flex flex-col gap-4">
-                <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row gap-4 justify-between items-center shadow-sm z-30 sticky top-[72px]">
-                    <select id="filterRole" class="bg-white border border-purple-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-purple-400 outline-none w-full md:w-auto" onchange="renderTable()">
-                        <option value="all">ดูทั้งหมด</option>
-                        <option value="ประธานนักเรียน">เฉพาะประธาน</option>
-                        <option value="กรรมการนักเรียน">เฉพาะกรรมการ</option>
-                    </select>
-                    <input type="text" id="searchInput" placeholder="ค้นหารหัส, ชื่อ, เลขใบสมัคร..." class="w-full bg-white border border-purple-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-purple-400 outline-none" onkeyup="renderTable()">
-                    
-                    <button id="batchSaveBtn" onclick="saveBatchStatuses()" class="hidden w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2">
-                        บันทึกสถานะ (<span id="changedCount">0</span>)
-                    </button>
+        <div class="max-w-7xl mx-auto p-4 mt-2">
+            <div class="glass-card p-4 rounded-2xl mb-6 shadow-sm">
+                <h3 class="font-bold text-purple-800 mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> สรุปสถิติผู้สมัคร
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                    <div class="stat-box bg-purple-50 border-purple-200 text-purple-800"><div class="text-[11px] font-bold opacity-70">ยอดรวมทั้งหมด</div><div class="stat-num" id="stTotal">0</div></div>
+                    <div class="stat-box bg-indigo-50 border-indigo-200 text-indigo-800"><div class="text-[11px] font-bold opacity-70">ประธาน / กรรมการ</div><div class="stat-num text-xl mt-2" id="stRole">0 / 0</div></div>
+                    <div class="stat-box"><div class="text-[11px] font-bold text-gray-500">รอตรวจสอบ</div><div class="stat-num text-gray-700" id="stPending">0</div></div>
+                    <div class="stat-box bg-red-50 border-red-200"><div class="text-[11px] font-bold text-red-600">เอกสารไม่เรียบร้อย</div><div class="stat-num text-red-700" id="stIncomplete">0</div></div>
+                    <div class="stat-box bg-green-50 border-green-200"><div class="text-[11px] font-bold text-green-700">ส่งใบสมัครเรียบร้อย</div><div class="stat-num text-green-700" id="stSubmitted">0</div></div>
+                    <div class="stat-box bg-blue-50 border-blue-200"><div class="text-[11px] font-bold text-blue-700">ยืนยันรับสัมภาษณ์</div><div class="stat-num text-blue-700" id="stConfirmed">0</div></div>
+                    <div class="stat-box bg-gray-100 border-gray-300"><div class="text-[11px] font-bold text-gray-600">สละสิทธิ์/หมดเวลา</div><div class="stat-num text-gray-700" id="stWaived">0</div></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="glass-card p-5 rounded-2xl">
+                        <h2 class="font-bold text-purple-800 border-b border-purple-100 pb-2 mb-4">การตั้งค่าทั่วไป</h2>
+                        
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">สถานะระบบปัจจุบัน</label>
+                        <div id="liveStatusBadge" class="w-full bg-gray-100 border border-gray-300 text-gray-600 rounded-lg p-2.5 text-[11px] mb-4 font-bold text-center flex flex-col justify-center items-center shadow-sm">กำลังคำนวณสถานะ...</div>
+                        
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">บังคับ ปิดระบบทั้งหมด (Manual)</label>
+                        <select id="systemStatusSelect" class="w-full bg-white/60 border border-purple-100 rounded-lg p-2 text-sm mb-3 outline-none">
+                            <option value="open">🟢 เปิดการทำงานตามเวลาที่ตั้ง</option>
+                            <option value="closed">🔴 ปิดระบบทั้งหมดทันที</option>
+                        </select>
+
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">ปีการศึกษา</label>
+                        <input type="number" id="academicYearInput" class="w-full bg-white/60 border border-purple-100 rounded-lg p-2 text-sm mb-4 outline-none">
+                        
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mb-4 shadow-inner">
+                            <label class="block text-[11px] font-bold text-gray-700 mb-1">เวลาเปิดรับสมัคร</label>
+                            <input type="datetime-local" id="appStartTimeInput" class="w-full bg-white border border-gray-300 rounded-md p-1.5 text-xs mb-2">
+                            <label class="block text-[11px] font-bold text-gray-700 mb-1">เวลาปิดรับสมัคร (ฟอร์มปิด + ตัดสิทธิ์)</label>
+                            <input type="datetime-local" id="appEndTimeInput" class="w-full bg-white border border-gray-300 rounded-md p-1.5 text-xs">
+                        </div>
+
+                        <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 mb-4 shadow-inner">
+                            <label class="block text-[11px] font-bold text-purple-800 mb-1">เวลาเริ่มให้กดยืนยันสิทธิ์</label>
+                            <input type="datetime-local" id="confirmStartTimeInput" class="w-full bg-white border border-purple-200 rounded-md p-1.5 text-xs mb-2">
+                            <label class="block text-[11px] font-bold text-red-700 mb-1">เวลาปิดให้กดยืนยันสิทธิ์ (สละสิทธิ์ออโต้)</label>
+                            <input type="datetime-local" id="confirmEndTimeInput" class="w-full bg-white border border-red-200 rounded-md p-1.5 text-xs">
+                        </div>
+
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4 shadow-inner">
+                            <label class="block text-[11px] font-bold text-blue-800 mb-1">เวลาประกาศคิวสัมภาษณ์</label>
+                            <input type="datetime-local" id="interviewAnnounceTimeInput" class="w-full bg-white border border-blue-200 rounded-md p-1.5 text-xs mb-2">
+                            <label class="block text-[11px] font-bold text-blue-800 mb-1">เวลาเริ่มสัมภาษณ์</label>
+                            <input type="datetime-local" id="interviewStartTimeInput" class="w-full bg-white border border-blue-200 rounded-md p-1.5 text-xs mb-2">
+                            <label class="block text-[11px] font-bold text-blue-800 mb-1">สถานที่สัมภาษณ์</label>
+                            <input type="text" id="interviewLocationInput" class="w-full bg-white border border-blue-200 rounded-md p-1.5 text-xs mb-2">
+                            <label class="block text-[11px] font-bold text-blue-800 mb-1">ประกาศเพิ่มเติม</label>
+                            <textarea id="interviewNoteInput" class="w-full bg-white border border-blue-200 rounded-md p-1.5 text-xs" rows="2"></textarea>
+                        </div>
+
+                        <div class="bg-green-50 p-3 rounded-lg border border-green-200 mb-4 shadow-inner">
+                            <label class="block text-[11px] font-bold text-green-800 mb-1">เวลาประกาศผลการคัดเลือก</label>
+                            <input type="datetime-local" id="resultAnnounceTimeInput" class="w-full bg-white border border-green-300 rounded-md p-1.5 text-xs">
+                        </div>
+
+                        <button onclick="saveSettings()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl text-sm font-bold shadow-md transition-all">บันทึกการตั้งค่าทั้งหมด</button>
+                    </div>
+
+                    <div class="glass-card p-5 rounded-2xl">
+                        <h2 class="font-bold text-yellow-700 border-b border-yellow-200 pb-2 mb-4">ฐานข้อมูล ม.4</h2>
+                        <div id="lastUpdatedText" class="text-[11px] text-gray-700 bg-white/60 p-2.5 rounded-xl mb-4 border border-yellow-200">กำลังตรวจสอบ...</div>
+                        <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="w-full bg-white/60 border border-yellow-200 rounded-xl p-1.5 text-xs mb-2">
+                        <button id="importStudentsBtn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-purple-900 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all mb-4">อัปเดตรายชื่อ ม.4</button>
+                        <button onclick="deleteStudents()" class="w-full bg-white/50 border border-red-200 hover:bg-red-50 text-red-600 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> ล้างข้อมูลนักเรียนเก่า
+                        </button>
+                    </div>
                 </div>
 
-                <div class="glass-card rounded-2xl overflow-hidden shadow-lg">
-                    <div class="overflow-x-auto p-2">
-                        <table class="w-full text-sm text-left border-collapse">
-                            <thead class="text-purple-900 bg-purple-100/50 backdrop-blur-md">
-                                <tr>
-                                    <th class="p-4 font-bold">ข้อมูลใบสมัคร</th>
-                                    <th class="p-4 font-bold">ชื่อ-สกุล</th>
-                                    <th class="p-4 font-bold">ตำแหน่ง (พรรค)</th>
-                                    <th class="p-4 font-bold text-center">แก้ไขสถานะ</th>
-                                    <th class="p-4 font-bold text-center">เอกสาร</th>
-                                </tr>
-                            </thead>
-                            <tbody id="adminTableBody" class="divide-y divide-purple-50/50"></tbody>
-                        </table>
+                <div class="lg:col-span-3 flex flex-col gap-4">
+                    <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row gap-4 justify-between items-center shadow-sm z-30 sticky top-[72px]">
+                        <select id="filterRole" class="bg-white border border-purple-200 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-purple-400 outline-none w-full md:w-auto" onchange="renderTable()">
+                            <option value="all">ดูทั้งหมด</option>
+                            <option value="ประธานนักเรียน">เฉพาะประธาน</option>
+                            <option value="กรรมการนักเรียน">เฉพาะกรรมการ</option>
+                        </select>
+                        <input type="text" id="searchInput" placeholder="ค้นหารหัส, ชื่อ, เลขใบสมัคร..." class="w-full bg-white border border-purple-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-purple-400 outline-none" onkeyup="renderTable()">
+                        
+                        <button id="batchSaveBtn" onclick="saveBatchStatuses()" class="hidden w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2">
+                            บันทึกสถานะ (<span id="changedCount">0</span>)
+                        </button>
+                    </div>
+
+                    <div class="glass-card rounded-2xl overflow-hidden shadow-lg">
+                        <div class="overflow-x-auto p-2">
+                            <table class="w-full text-sm text-left border-collapse">
+                                <thead class="text-purple-900 bg-purple-100/50 backdrop-blur-md">
+                                    <tr>
+                                        <th class="p-4 font-bold">ข้อมูลใบสมัคร</th>
+                                        <th class="p-4 font-bold">ชื่อ-สกุล</th>
+                                        <th class="p-4 font-bold">ตำแหน่ง (พรรค)</th>
+                                        <th class="p-4 font-bold text-center">แก้ไขสถานะ</th>
+                                        <th class="p-4 font-bold text-center">เอกสาร</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminTableBody" class="divide-y divide-purple-50/50"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -154,12 +179,47 @@
 
     <script>
         // ========================================================
-        // ⚠️ ใส่ลิงก์ Web App ตรงนี้ 
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzgZ75s7SMTRbPx5Cq_iHKgS9qhDq1CiZwyLurGDuoyRFzXPdT-ppCTPF12PIPHNFxYTw/exec";
         // ========================================================
 
         let allApplications = []; 
         let pendingUpdates = {};
+
+        // 🟢 ระบบตรวจสอบ Login แอดมิน
+        window.onload = function() {
+            const savedAdmin = localStorage.getItem('mstsc_admin_login');
+            if (savedAdmin === 'studentcouncil@mst.ac.th') {
+                document.getElementById('adminLoginView').style.display = 'none';
+                document.getElementById('adminDashboardView').style.display = 'block';
+                loadData();
+            }
+        };
+
+        function decodeJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        async function handleAdminLogin(response) {
+            try {
+                const payload = decodeJwtResponse(response.credential);
+                if(payload.email === 'studentcouncil@mst.ac.th') {
+                    localStorage.setItem('mstsc_admin_login', payload.email);
+                    document.getElementById('adminLoginView').style.display = 'none';
+                    document.getElementById('adminDashboardView').style.display = 'block';
+                    loadData();
+                } else {
+                    Swal.fire('ปฏิเสธการเข้าถึง', 'ใช้ได้เฉพาะอีเมล studentcouncil@mst.ac.th เท่านั้น', 'error');
+                }
+            } catch(e) { Swal.fire('Error', 'ไม่สามารถยืนยันตัวตนได้', 'error'); }
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('mstsc_admin_login');
+            location.reload();
+        }
 
         async function apiCall(payload) {
             const response = await fetch(WEB_APP_URL, {
@@ -168,47 +228,66 @@
             return await response.json();
         }
 
-        // 🟢 ฟังก์ชันคำนวณและแสดงป้ายสถานะระบบ
-        function updateLiveStatusBadge(startTimeStr, endTimeStr) {
+        function updateLiveStatusBadge(settings) {
             const badge = document.getElementById('liveStatusBadge');
             const now = new Date();
             
-            if (!startTimeStr || !endTimeStr) {
-                badge.className = "w-full bg-gray-100 border border-gray-300 text-gray-500 rounded-lg p-2 text-sm mb-4 font-bold text-center flex justify-center items-center gap-2";
-                badge.innerHTML = "⚫ ยังไม่ได้ตั้งเวลาเปิด/ปิด";
+            if(settings.SystemStatus === 'closed') {
+                badge.className = "w-full bg-red-50 border border-red-300 text-red-600 rounded-lg p-2.5 text-[11px] mb-4 font-bold text-center shadow-sm";
+                badge.innerHTML = '<span class="text-sm">🔴 ระบบถูกบังคับปิดโดยแอดมิน</span>';
                 return;
             }
 
-            const startTime = new Date(startTimeStr);
-            const endTime = new Date(endTimeStr);
+            const appStart = settings.AppStartTime ? new Date(settings.AppStartTime) : null;
+            const appEnd = settings.AppEndTime ? new Date(settings.AppEndTime) : null;
+            const confStart = settings.ConfirmStartTime ? new Date(settings.ConfirmStartTime) : null;
+            const confEnd = settings.ConfirmEndTime ? new Date(settings.ConfirmEndTime) : null;
+            const intAnn = settings.InterviewAnnounceTime ? new Date(settings.InterviewAnnounceTime) : null;
+            const resAnn = settings.ResultAnnounceTime ? new Date(settings.ResultAnnounceTime) : null;
 
-            if (now < startTime) {
-                badge.className = "w-full bg-yellow-50 border border-yellow-300 text-yellow-700 rounded-lg p-2 text-sm mb-4 font-bold text-center flex justify-center items-center gap-2 shadow-sm";
-                badge.innerHTML = "🟡 รอเวลาเปิดรับสมัคร";
-            } else if (now >= startTime && now <= endTime) {
-                badge.className = "w-full bg-green-50 border border-green-400 text-green-700 rounded-lg p-2 text-sm mb-4 font-bold text-center flex justify-center items-center gap-2 shadow-md animate-pulse";
-                badge.innerHTML = "🟢 กำลังเปิดรับสมัคร";
+            const formatDT = (d) => d.toLocaleString('th-TH', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) + ' น.';
+
+            if (appStart && now < appStart) {
+                badge.className = "w-full bg-gray-50 border border-gray-300 text-gray-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
+                badge.innerHTML = `<span class="text-sm text-gray-500">⚪ ยังไม่เปิดรับสมัคร</span><br>ระบบจะเปิดรับสมัครในวันที่ ${formatDT(appStart)}`;
+            } else if (appStart && appEnd && now >= appStart && now <= appEnd) {
+                badge.className = "w-full bg-green-50 border border-green-400 text-green-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center animate-pulse";
+                badge.innerHTML = `<span class="text-sm">🟢 กำลังเปิดรับสมัคร</span><br>หมดเขตวันที่ ${formatDT(appEnd)}`;
+            } else if (appEnd && confStart && now > appEnd && now < confStart) {
+                badge.className = "w-full bg-yellow-50 border border-yellow-300 text-yellow-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
+                badge.innerHTML = `<span class="text-sm">🟡 ปิดรับสมัครแล้ว</span><br>รอเปิดให้ยืนยันสิทธิ์วันที่ ${formatDT(confStart)}`;
+            } else if (confStart && confEnd && now >= confStart && now <= confEnd) {
+                badge.className = "w-full bg-blue-50 border border-blue-400 text-blue-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center animate-pulse";
+                badge.innerHTML = `<span class="text-sm">🔵 กำลังเปิดให้ยืนยันสิทธิ์</span><br>หมดเขตวันที่ ${formatDT(confEnd)}`;
+            } else if (confEnd && intAnn && now > confEnd && now < intAnn) {
+                badge.className = "w-full bg-yellow-50 border border-yellow-300 text-yellow-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
+                badge.innerHTML = `<span class="text-sm">🟡 หมดเวลายืนยันสิทธิ์</span><br>รอประกาศคิวสัมภาษณ์ ${formatDT(intAnn)}`;
+            } else if (intAnn && resAnn && now >= intAnn && now < resAnn) {
+                badge.className = "w-full bg-purple-50 border border-purple-300 text-purple-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
+                badge.innerHTML = `<span class="text-sm">🟣 ประกาศคิวแล้ว</span><br>รอประกาศผลการคัดเลือก ${formatDT(resAnn)}`;
+            } else if (resAnn && now >= resAnn) {
+                badge.className = "w-full bg-green-100 border border-green-500 text-green-800 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
+                badge.innerHTML = `<span class="text-sm">🎉 ประกาศผลการคัดเลือกแล้ว</span><br>สิ้นสุดกระบวนการรับสมัคร`;
             } else {
-                badge.className = "w-full bg-red-50 border border-red-300 text-red-600 rounded-lg p-2 text-sm mb-4 font-bold text-center flex justify-center items-center gap-2 shadow-sm";
-                badge.innerHTML = "🔴 ปิดระบบรับสมัครแล้ว";
+                badge.className = "w-full bg-gray-100 border border-gray-300 text-gray-500 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
+                badge.innerHTML = "⚫ ยังไม่ได้ตั้งค่าเวลาให้ครบถ้วน";
             }
         }
 
         async function loadData() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('loadingOverlay').style.opacity = '1';
             pendingUpdates = {}; 
             document.getElementById('batchSaveBtn').classList.add('hidden');
             try {
                 const result = await apiCall({ action: "getAdminData" });
                 if (result.status === 'success') {
-                    
+                    document.getElementById('systemStatusSelect').value = result.settings.SystemStatus || 'open';
                     document.getElementById('academicYearInput').value = result.settings.CurrentAcademicYear || '';
                     
                     const safeTime = (t) => t ? t.toString().substring(0, 16) : '';
-                    const appStart = safeTime(result.settings.AppStartTime);
-                    const appEnd = safeTime(result.settings.AppEndTime);
-                    
-                    document.getElementById('appStartTimeInput').value = appStart;
-                    document.getElementById('appEndTimeInput').value = appEnd;
+                    document.getElementById('appStartTimeInput').value = safeTime(result.settings.AppStartTime);
+                    document.getElementById('appEndTimeInput').value = safeTime(result.settings.AppEndTime);
                     document.getElementById('confirmStartTimeInput').value = safeTime(result.settings.ConfirmStartTime);
                     document.getElementById('confirmEndTimeInput').value = safeTime(result.settings.ConfirmEndTime);
                     document.getElementById('interviewAnnounceTimeInput').value = safeTime(result.settings.InterviewAnnounceTime);
@@ -219,11 +298,9 @@
                     
                     document.getElementById('lastUpdatedText').innerHTML = `อัปเดตล่าสุด: <br><span class="font-bold text-yellow-700">${result.settings.LastUpdatedM4}</span>`;
                     
-                    // อัปเดตป้ายสถานะ
-                    updateLiveStatusBadge(appStart, appEnd);
-                    
                     allApplications = result.data;
                     updateDashboardStats();
+                    updateLiveStatusBadge(result.settings);
                     renderTable();
                     
                     document.getElementById('loadingOverlay').style.opacity = '0';
@@ -235,11 +312,9 @@
         function updateDashboardStats() {
             let total = allApplications.length;
             let pres = 0, com = 0, pend = 0, inc = 0, sub = 0, conf = 0, waive = 0;
-            
             allApplications.forEach(app => {
                 if(app.position === 'ประธานนักเรียน') pres++;
                 if(app.position === 'กรรมการนักเรียน') com++;
-                
                 let s = app.status;
                 if(s === 'รอตรวจสอบ' || s.includes('พิมพ์ใบสมัครแล้ว') || s === 'รอส่งใบสมัคร') pend++;
                 if(s.includes('ไม่เรียบร้อย')) inc++;
@@ -247,7 +322,6 @@
                 if(s === 'ยืนยันสมัครต่อ' || s.includes('ผ่าน')) conf++;
                 if(s.includes('สละสิทธิ์') || s.includes('หมดเวลา')) waive++;
             });
-
             document.getElementById('stTotal').innerText = total;
             document.getElementById('stRole').innerText = `${pres} / ${com}`;
             document.getElementById('stPending').innerText = pend;
@@ -323,16 +397,11 @@
 
         async function saveSettings() {
             const payload = {
-                action: "updateSettings", 
-                CurrentAcademicYear: document.getElementById('academicYearInput').value,
-                AppStartTime: document.getElementById('appStartTimeInput').value, 
-                AppEndTime: document.getElementById('appEndTimeInput').value,
-                ConfirmStartTime: document.getElementById('confirmStartTimeInput').value, 
-                ConfirmEndTime: document.getElementById('confirmEndTimeInput').value,
-                InterviewAnnounceTime: document.getElementById('interviewAnnounceTimeInput').value, 
-                InterviewStartTime: document.getElementById('interviewStartTimeInput').value,
-                InterviewLocation: document.getElementById('interviewLocationInput').value, 
-                InterviewNote: document.getElementById('interviewNoteInput').value,
+                action: "updateSettings", SystemStatus: document.getElementById('systemStatusSelect').value, CurrentAcademicYear: document.getElementById('academicYearInput').value,
+                AppStartTime: document.getElementById('appStartTimeInput').value, AppEndTime: document.getElementById('appEndTimeInput').value,
+                ConfirmStartTime: document.getElementById('confirmStartTimeInput').value, ConfirmEndTime: document.getElementById('confirmEndTimeInput').value,
+                InterviewAnnounceTime: document.getElementById('interviewAnnounceTimeInput').value, InterviewStartTime: document.getElementById('interviewStartTimeInput').value,
+                InterviewLocation: document.getElementById('interviewLocationInput').value, InterviewNote: document.getElementById('interviewNoteInput').value,
                 ResultAnnounceTime: document.getElementById('resultAnnounceTimeInput').value
             };
             Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
@@ -343,16 +412,7 @@
         function exportQueueToExcel() {
             let queueData = allApplications.filter(a => a.queueNumber && (a.status === 'ยืนยันสมัครต่อ' || a.status.includes('ผ่าน'))).sort((a,b) => a.queueNumber - b.queueNumber);
             if(queueData.length === 0) return Swal.fire('ไม่มีข้อมูล', 'ยังไม่มีผู้มีสิทธิ์สัมภาษณ์ในระบบ', 'warning');
-
-            let exportArr = queueData.map((a, index) => ({
-                "ที่": index + 1,
-                "คิว": "Q-" + ("00" + a.queueNumber).slice(-3),
-                "เลขที่ใบสมัคร": a.appNumber,
-                "ชื่อ-สกุล": a.name,
-                "ห้อง": a.room,
-                "ตำแหน่ง": a.position
-            }));
-
+            let exportArr = queueData.map((a, index) => ({ "ที่": index + 1, "คิว": "Q-" + ("00" + a.queueNumber).slice(-3), "เลขที่ใบสมัคร": a.appNumber, "ชื่อ-สกุล": a.name, "ห้อง": a.room, "ตำแหน่ง": a.position }));
             const ws = XLSX.utils.json_to_sheet(exportArr);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Interview_Queue");
@@ -389,7 +449,6 @@
                 if(r.isConfirmed) { await apiCall({ action: "deleteStudents" }); loadData(); }
             });
         }
-        window.onload = loadData;
     </script>
 </body>
 </html>
