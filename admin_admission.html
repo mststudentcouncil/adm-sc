@@ -32,9 +32,9 @@
     <div id="adminLoginView" class="min-h-screen flex items-center justify-center p-4">
         <div class="glass-card p-8 rounded-3xl shadow-xl w-full max-w-md text-center">
             <img src="https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png" class="w-24 mx-auto mb-6">
-            <h2 class="text-2xl font-bold text-purple-900 mb-2">Admin Dashboard</h2>
+            <h2 class="text-2xl font-bold text-purple-900 mb-2">Admin Admission MSTSC</h2>
             <p class="text-red-500 font-bold text-sm mb-6 bg-red-50 py-2 rounded-lg border border-red-100">
-                ⚠️ สงวนสิทธิ์เฉพาะ <br>studentcouncil@mst.ac.th
+                คณะกรรมการสภานักเรียนเท่านั้นที่จะเข้าสู่ระบบนี้ได้
             </p>
             
             <div class="flex justify-center">
@@ -49,7 +49,7 @@
             <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
                 <div class="flex items-center gap-3">
                     <img src="https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png" alt="Logo" class="h-10 w-10 drop-shadow-md">
-                    <h1 class="text-lg font-bold text-purple-800">Dashboard จัดการรับสมัคร</h1>
+                    <h1 class="text-lg font-bold text-purple-800">Admin Admission MSTSC</h1>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="exportQueueToExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-2">
@@ -59,7 +59,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> รีเฟรช
                     </button>
                     <button onclick="logoutAdmin()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-bold border border-red-200 transition-all flex items-center gap-2">
-                        ออก
+                        ออกจากระบบ
                     </button>
                 </div>
             </div>
@@ -71,7 +71,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg> สรุปสถิติผู้สมัคร
                 </h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                    <div class="stat-box bg-purple-50 border-purple-200 text-purple-800"><div class="text-[11px] font-bold opacity-70">ยอดรวมทั้งหมด</div><div class="stat-num" id="stTotal">0</div></div>
+                    <div class="stat-box bg-purple-50 border-purple-200 text-purple-800"><div class="text-[11px] font-bold opacity-70">ผู้สมัครทั้งหมด</div><div class="stat-num" id="stTotal">0</div></div>
                     <div class="stat-box bg-indigo-50 border-indigo-200 text-indigo-800"><div class="text-[11px] font-bold opacity-70">ประธาน / กรรมการ</div><div class="stat-num text-xl mt-2" id="stRole">0 / 0</div></div>
                     <div class="stat-box"><div class="text-[11px] font-bold text-gray-500">รอตรวจสอบ</div><div class="stat-num text-gray-700" id="stPending">0</div></div>
                     <div class="stat-box bg-red-50 border-red-200"><div class="text-[11px] font-bold text-red-600">เอกสารไม่เรียบร้อย</div><div class="stat-num text-red-700" id="stIncomplete">0</div></div>
@@ -345,7 +345,7 @@
             tbody.innerHTML = '';
             if (filteredData.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-gray-500 font-medium">ไม่พบข้อมูล</td></tr>'; return; }
 
-            const allowedStatuses = ["รอตรวจสอบ", "ส่งใบสมัครเรียบร้อย", "เอกสารไม่เรียบร้อย (ไม่ได้แนบผลการเรียน)", "เอกสารไม่เรียบร้อย (ไม่มีความคิดเห็นของหัวหน้าระดับ)", "พิมพ์ใบสมัครแล้ว (ให้มารับใบสมัครที่ห้องสภา) / รอส่งใบสมัคร", "ผ่านการคัดเลือก", "ไม่ผ่านการคัดเลือก", "สละสิทธิ์การสมัคร"];
+            const allowedStatuses = ["รอตรวจสอบ", "พิมพ์ใบสมัครแล้ว", "เอกสารไม่เรียบร้อย (ไม่ได้แนบผลการเรียน)", "เอกสารไม่เรียบร้อย (ไม่มีความคิดเห็นของหัวหน้าระดับ)","ส่งใบสมัครเรียบร้อย",  "สละสิทธิ์การสมัคร", "ไม่ผ่านการคัดเลือก", "ผ่านการคัดเลือก"];
 
             filteredData.forEach(app => {
                 let currentStatus = app.status || '';
