@@ -20,6 +20,7 @@
         @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.7; } }
         .stat-box { padding: 1rem; border-radius: 1rem; text-align: center; border: 1px solid rgba(0,0,0,0.05); background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center;}
         .stat-num { font-size: 1.8rem; font-weight: 800; line-height: 1; margin-top: 0.5rem; }
+        .svg-icon-inline { width: 1.25rem; height: 1.25rem; display: inline-block; vertical-align: text-bottom; margin-right: 0.25rem; }
     </style>
 </head>
 <body class="text-gray-800 pb-10 relative">
@@ -91,8 +92,8 @@
                         
                         <label class="block text-[11px] font-bold text-gray-700 mb-1">บังคับ ปิดระบบทั้งหมด (Manual)</label>
                         <select id="systemStatusSelect" class="w-full bg-white/60 border border-purple-100 rounded-lg p-2 text-sm mb-3 outline-none">
-                            <option value="open">🟢 เปิดการทำงานตามเวลาที่ตั้ง</option>
-                            <option value="closed">🔴 ปิดระบบทั้งหมดทันที</option>
+                            <option value="open">เปิดการทำงานตามเวลาที่ตั้ง</option>
+                            <option value="closed">ปิดระบบทั้งหมดทันที</option>
                         </select>
 
                         <label class="block text-[11px] font-bold text-gray-700 mb-1">ปีการศึกษา</label>
@@ -185,6 +186,21 @@
         let allApplications = []; 
         let pendingUpdates = {};
 
+        // SVG Icons definitions
+        const svgIcons = {
+            redCircle: `<svg class="svg-icon-inline text-red-500" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"></circle></svg>`,
+            greenCircle: `<svg class="svg-icon-inline text-green-500" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"></circle></svg>`,
+            yellowCircle: `<svg class="svg-icon-inline text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"></circle></svg>`,
+            blueCircle: `<svg class="svg-icon-inline text-blue-500" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"></circle></svg>`,
+            purpleCircle: `<svg class="svg-icon-inline text-purple-500" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"></circle></svg>`,
+            grayCircle: `<svg class="svg-icon-inline text-gray-400" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"></circle></svg>`,
+            blackCircle: `<svg class="svg-icon-inline text-gray-800" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"></circle></svg>`,
+            party: `<svg class="svg-icon-inline text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>`,
+            photo: `<svg class="svg-icon-inline text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>`,
+            pdf: `<svg class="svg-icon-inline text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>`,
+            target: `<svg class="svg-icon-inline text-blue-700 w-3 h-3 m-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>`
+        };
+
         // 🟢 ระบบตรวจสอบ Login แอดมิน
         window.onload = function() {
             const savedAdmin = localStorage.getItem('mstsc_admin_login');
@@ -234,7 +250,7 @@
             
             if(settings.SystemStatus === 'closed') {
                 badge.className = "w-full bg-red-50 border border-red-300 text-red-600 rounded-lg p-2.5 text-[11px] mb-4 font-bold text-center shadow-sm";
-                badge.innerHTML = '<span class="text-sm">🔴 ระบบถูกบังคับปิดโดยแอดมิน</span>';
+                badge.innerHTML = `<span class="text-sm">${svgIcons.redCircle} ระบบถูกบังคับปิดโดยแอดมิน</span>`;
                 return;
             }
 
@@ -249,28 +265,28 @@
 
             if (appStart && now < appStart) {
                 badge.className = "w-full bg-gray-50 border border-gray-300 text-gray-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
-                badge.innerHTML = `<span class="text-sm text-gray-500">⚪ ยังไม่เปิดรับสมัคร</span><br>ระบบจะเปิดรับสมัครในวันที่ ${formatDT(appStart)}`;
+                badge.innerHTML = `<span class="text-sm text-gray-500">${svgIcons.grayCircle} ยังไม่เปิดรับสมัคร</span><br>ระบบจะเปิดรับสมัครในวันที่ ${formatDT(appStart)}`;
             } else if (appStart && appEnd && now >= appStart && now <= appEnd) {
                 badge.className = "w-full bg-green-50 border border-green-400 text-green-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center animate-pulse";
-                badge.innerHTML = `<span class="text-sm">🟢 กำลังเปิดรับสมัคร</span><br>หมดเขตวันที่ ${formatDT(appEnd)}`;
+                badge.innerHTML = `<span class="text-sm">${svgIcons.greenCircle} กำลังเปิดรับสมัคร</span><br>หมดเขตวันที่ ${formatDT(appEnd)}`;
             } else if (appEnd && confStart && now > appEnd && now < confStart) {
                 badge.className = "w-full bg-yellow-50 border border-yellow-300 text-yellow-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
-                badge.innerHTML = `<span class="text-sm">🟡 ปิดรับสมัครแล้ว</span><br>รอเปิดให้ยืนยันสิทธิ์วันที่ ${formatDT(confStart)}`;
+                badge.innerHTML = `<span class="text-sm">${svgIcons.yellowCircle} ปิดรับสมัครแล้ว</span><br>รอเปิดให้ยืนยันสิทธิ์วันที่ ${formatDT(confStart)}`;
             } else if (confStart && confEnd && now >= confStart && now <= confEnd) {
                 badge.className = "w-full bg-blue-50 border border-blue-400 text-blue-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center animate-pulse";
-                badge.innerHTML = `<span class="text-sm">🔵 กำลังเปิดให้ยืนยันสิทธิ์</span><br>หมดเขตวันที่ ${formatDT(confEnd)}`;
+                badge.innerHTML = `<span class="text-sm">${svgIcons.blueCircle} กำลังเปิดให้ยืนยันสิทธิ์</span><br>หมดเขตวันที่ ${formatDT(confEnd)}`;
             } else if (confEnd && intAnn && now > confEnd && now < intAnn) {
                 badge.className = "w-full bg-yellow-50 border border-yellow-300 text-yellow-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
-                badge.innerHTML = `<span class="text-sm">🟡 หมดเวลายืนยันสิทธิ์</span><br>รอประกาศคิวสัมภาษณ์ ${formatDT(intAnn)}`;
+                badge.innerHTML = `<span class="text-sm">${svgIcons.yellowCircle} หมดเวลายืนยันสิทธิ์</span><br>รอประกาศคิวสัมภาษณ์ ${formatDT(intAnn)}`;
             } else if (intAnn && resAnn && now >= intAnn && now < resAnn) {
                 badge.className = "w-full bg-purple-50 border border-purple-300 text-purple-700 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
-                badge.innerHTML = `<span class="text-sm">🟣 ประกาศคิวแล้ว</span><br>รอประกาศผลการคัดเลือก ${formatDT(resAnn)}`;
+                badge.innerHTML = `<span class="text-sm">${svgIcons.purpleCircle} ประกาศคิวแล้ว</span><br>รอประกาศผลการคัดเลือก ${formatDT(resAnn)}`;
             } else if (resAnn && now >= resAnn) {
                 badge.className = "w-full bg-green-100 border border-green-500 text-green-800 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
-                badge.innerHTML = `<span class="text-sm">🎉 ประกาศผลการคัดเลือกแล้ว</span><br>สิ้นสุดกระบวนการรับสมัคร`;
+                badge.innerHTML = `<span class="text-sm">${svgIcons.party} ประกาศผลการคัดเลือกแล้ว</span><br>สิ้นสุดกระบวนการรับสมัคร`;
             } else {
                 badge.className = "w-full bg-gray-100 border border-gray-300 text-gray-500 rounded-lg p-2 text-[11px] mb-4 font-bold text-center";
-                badge.innerHTML = "⚫ ยังไม่ได้ตั้งค่าเวลาให้ครบถ้วน";
+                badge.innerHTML = `${svgIcons.blackCircle} ยังไม่ได้ตั้งค่าเวลาให้ครบถ้วน`;
             }
         }
 
@@ -279,34 +295,45 @@
             document.getElementById('loadingOverlay').style.opacity = '1';
             pendingUpdates = {}; 
             document.getElementById('batchSaveBtn').classList.add('hidden');
+            
             try {
                 const result = await apiCall({ action: "getAdminData" });
+                
                 if (result.status === 'success') {
-                    document.getElementById('systemStatusSelect').value = result.settings.SystemStatus || 'open';
-                    document.getElementById('academicYearInput').value = result.settings.CurrentAcademicYear || '';
+                    // ป้องกัน Error กรณีที่ดึงค่า Settings มาแล้วเป็นค่าว่าง
+                    const settings = result.settings || {};
+                    
+                    document.getElementById('systemStatusSelect').value = settings.SystemStatus || 'open';
+                    document.getElementById('academicYearInput').value = settings.CurrentAcademicYear || '';
                     
                     const safeTime = (t) => t ? t.toString().substring(0, 16) : '';
-                    document.getElementById('appStartTimeInput').value = safeTime(result.settings.AppStartTime);
-                    document.getElementById('appEndTimeInput').value = safeTime(result.settings.AppEndTime);
-                    document.getElementById('confirmStartTimeInput').value = safeTime(result.settings.ConfirmStartTime);
-                    document.getElementById('confirmEndTimeInput').value = safeTime(result.settings.ConfirmEndTime);
-                    document.getElementById('interviewAnnounceTimeInput').value = safeTime(result.settings.InterviewAnnounceTime);
-                    document.getElementById('interviewStartTimeInput').value = safeTime(result.settings.InterviewStartTime);
-                    document.getElementById('interviewLocationInput').value = result.settings.InterviewLocation || '';
-                    document.getElementById('interviewNoteInput').value = result.settings.InterviewNote || '';
-                    document.getElementById('resultAnnounceTimeInput').value = safeTime(result.settings.ResultAnnounceTime);
+                    document.getElementById('appStartTimeInput').value = safeTime(settings.AppStartTime);
+                    document.getElementById('appEndTimeInput').value = safeTime(settings.AppEndTime);
+                    document.getElementById('confirmStartTimeInput').value = safeTime(settings.ConfirmStartTime);
+                    document.getElementById('confirmEndTimeInput').value = safeTime(settings.ConfirmEndTime);
+                    document.getElementById('interviewAnnounceTimeInput').value = safeTime(settings.InterviewAnnounceTime);
+                    document.getElementById('interviewStartTimeInput').value = safeTime(settings.InterviewStartTime);
+                    document.getElementById('interviewLocationInput').value = settings.InterviewLocation || '';
+                    document.getElementById('interviewNoteInput').value = settings.InterviewNote || '';
+                    document.getElementById('resultAnnounceTimeInput').value = safeTime(settings.ResultAnnounceTime);
                     
-                    document.getElementById('lastUpdatedText').innerHTML = `อัปเดตล่าสุด: <br><span class="font-bold text-yellow-700">${result.settings.LastUpdatedM4}</span>`;
+                    document.getElementById('lastUpdatedText').innerHTML = `อัปเดตล่าสุด: <br><span class="font-bold text-yellow-700">${settings.LastUpdatedM4 || '-'}</span>`;
                     
-                    allApplications = result.data;
+                    allApplications = result.data || [];
                     updateDashboardStats();
-                    updateLiveStatusBadge(result.settings);
+                    updateLiveStatusBadge(settings);
                     renderTable();
-                    
-                    document.getElementById('loadingOverlay').style.opacity = '0';
-                    setTimeout(() => document.getElementById('loadingOverlay').style.display = 'none', 500);
+                } else {
+                    Swal.fire('ผิดพลาด', result.message || 'ไม่สามารถดึงข้อมูลจากฐานข้อมูลได้', 'error');
                 }
-            } catch (error) { Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error'); }
+            } catch (error) { 
+                console.error("Load Data Error:", error);
+                Swal.fire('การเชื่อมต่อขัดข้อง', 'โหลดข้อมูลไม่สำเร็จ กรุณากดปุ่ม "รีเฟรช" อีกครั้ง', 'warning'); 
+            } finally {
+                // 🚨 จุดสำคัญที่แก้ปัญหาค้าง: บังคับซ่อนหน้าจอโหลดเสมอ ไม่ว่าจะดึงข้อมูลสำเร็จหรือไม่ก็ตาม
+                document.getElementById('loadingOverlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('loadingOverlay').style.display = 'none', 500);
+            }
         }
 
         function updateDashboardStats() {
@@ -359,7 +386,7 @@
                     statusColor = 'text-gray-600 bg-gray-100 border-gray-300';
                 }
 
-                let queueBadge = app.queueNumber && (currentStatus === 'ยืนยันสมัครต่อ' || currentStatus.includes('ผ่าน')) ? `<div class="mt-1.5 inline-block bg-blue-50 text-blue-700 border border-blue-200 text-[11px] px-2 py-0.5 rounded font-bold shadow-sm">🎯 คิว: ${("00" + app.queueNumber).slice(-3)}</div>` : '';
+                let queueBadge = app.queueNumber && (currentStatus === 'ยืนยันสมัครต่อ' || currentStatus.includes('ผ่าน')) ? `<div class="mt-1.5 inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200 text-[11px] px-2 py-0.5 rounded font-bold shadow-sm">${svgIcons.target} คิว: ${("00" + app.queueNumber).slice(-3)}</div>` : '';
                 
                 let optionsHtml = allowedStatuses.map(s => `<option value="${s}" ${currentStatus === s ? 'selected' : ''}>${s}</option>`).join('');
                 if(!allowedStatuses.includes(currentStatus)) optionsHtml = `<option value="${currentStatus}" selected hidden>${currentStatus}</option>` + optionsHtml;
@@ -372,7 +399,7 @@
                         <td class="p-4"><span class="font-bold text-gray-800">${app.studentId}</span><br><span class="text-sm">${app.name}</span> <span class="text-[10px] text-purple-600 font-bold ml-1 bg-purple-50 px-1.5 rounded">(${app.room})</span></td>
                         <td class="p-4"><span class="text-[11px] font-bold px-2 py-0.5 rounded-md mb-1 inline-block border bg-purple-100 text-purple-800">${app.position}</span><br><span class="text-sm font-medium text-gray-600">${app.party}</span></td>
                         <td class="p-4 text-center"><select onchange="queueStatusUpdate('${app.sheet}', ${app.rowIndex}, this.value, this)" class="bg-white/80 border rounded-xl p-2 text-[11px] cursor-pointer font-bold w-full outline-none transition-all ${statusColor} ${isChanged}">${optionsHtml}</select></td>
-                        <td class="p-4 w-24 text-center">${app.photoUrl ? `<a href="${app.photoUrl}" target="_blank" class="text-[11px] text-blue-600 font-bold block mb-1">🖼️ รูปถ่าย</a>` : ''}${app.pdfLink ? `<a href="${app.pdfLink}" target="_blank" class="text-xs text-red-600 font-bold">📄 PDF</a>` : `<span class="text-[10px] text-gray-400">รอ PDF</span>`}</td>
+                        <td class="p-4 w-24 text-center">${app.photoUrl ? `<a href="${app.photoUrl}" target="_blank" class="text-[11px] text-blue-600 font-bold flex items-center justify-center gap-1 mb-1">${svgIcons.photo} รูปถ่าย</a>` : ''}${app.pdfLink ? `<a href="${app.pdfLink}" target="_blank" class="text-xs text-red-600 font-bold flex items-center justify-center gap-1">${svgIcons.pdf} PDF</a>` : `<span class="text-[10px] text-gray-400">รอ PDF</span>`}</td>
                     </tr>`;
             });
         }
@@ -419,27 +446,63 @@
             XLSX.writeFile(wb, "ลำดับคิวสัมภาษณ์_สภานักเรียน.xlsx");
         }
 
+        // 🟢 อัปเกรดระบบนำเข้าข้อมูล ม.4 ให้ฉลาดขึ้น
         document.getElementById("importStudentsBtn").addEventListener("click", async () => {
             const fileInput = document.getElementById("excelFileInput");
             if (fileInput.files.length === 0) return Swal.fire('ผิดพลาด', 'เลือกไฟล์ก่อน', 'warning');
             Swal.fire({ title: 'อ่านไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             const reader = new FileReader();
             reader.onload = async function(e) {
-                const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                const targetSheetName = workbook.SheetNames.find(n => n.trim() === "m.4" || n.trim() === "ม.4");
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[targetSheetName], { header: 1, defval: "" });
-                let allStudents = []; let currentRoom = "ไม่ระบุ";
-                for (let row of rows) {
-                    if (!row || row.length === 0) continue;
-                    let idIndex = row.findIndex(c => (typeof c === 'string' || typeof c === 'number') && /^\d{5}$/.test(c.toString().trim()));
-                    if (idIndex !== -1) {
-                        let rowRoom = row.find(c => typeof c === 'string' && c.match(/^ม\.\d\/\d+/));
-                        if (rowRoom) currentRoom = rowRoom.trim();
-                        allStudents.push({ id: row[idIndex].toString().trim(), name: `${row[idIndex+1]||""}${row[idIndex+2]||""} ${row[idIndex+3]||""}`.trim(), room: currentRoom });
+                try {
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    // ดึงเฉพาะแผ่นงานที่ชื่อ ม.4 หรือ m.4
+                    const targetSheetName = workbook.SheetNames.find(n => n.trim().toLowerCase() === "m.4" || n.trim() === "ม.4");
+                    
+                    if(!targetSheetName) {
+                        Swal.fire('ไม่พบแผ่นงาน ม.4', 'กรุณาตั้งชื่อแผ่นงาน (Sheet) ในไฟล์ Excel ให้เป็น "ม.4" หรือ "m.4"', 'error');
+                        return;
                     }
+
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[targetSheetName], { header: 1, defval: "" });
+                    let allStudents = []; 
+                    let currentRoom = "ไม่ระบุ";
+                    
+                    for (let row of rows) {
+                        if (!row || row.length === 0) continue;
+                        
+                        let roomCell = row.find(c => typeof c === 'string' && c.includes('ห้อง ม.'));
+                        if (roomCell) { currentRoom = roomCell.replace('ห้อง', '').trim(); }
+
+                        let idIndex = row.findIndex(c => (typeof c === 'string' || typeof c === 'number') && /^\d{5}$/.test(c.toString().trim()));
+                        if (idIndex !== -1) {
+                            let studentId = row[idIndex].toString().trim();
+                            let title = row[idIndex + 1] ? row[idIndex + 1].toString().trim() : "";
+                            let fname = row[idIndex + 2] ? row[idIndex + 2].toString().trim() : "";
+                            let lname = row[idIndex + 3] ? row[idIndex + 3].toString().trim() : "";
+                            
+                            let fullName = (row.length > idIndex + 4 && row[idIndex + 4] && row[idIndex + 4].toString().includes(fname)) 
+                                ? row[idIndex + 4].toString().trim() : `${title}${fname} ${lname}`.trim();
+                            fullName = fullName.replace(/['"]/g, '');
+
+                            let rowRoom = row.find(c => typeof c === 'string' && c.match(/^ม\.\d\/\d+/));
+                            if (rowRoom) currentRoom = rowRoom.trim();
+
+                            if (studentId && fullName.length > 5) { 
+                                allStudents.push({ id: studentId, name: fullName, room: currentRoom });
+                            }
+                        }
+                    }
+
+                    if(allStudents.length === 0) {
+                        Swal.fire('ผิดพลาด', 'ไม่พบรายชื่อในรูปแบบที่ถูกต้องในแผ่นงาน ม.4', 'error');
+                        return;
+                    }
+
+                    const resData = await apiCall({ action: "uploadStudents", students: allStudents });
+                    if(resData.status === 'success') { Swal.fire('สำเร็จ', `อัปเดตเรียบร้อย (${allStudents.length} คน)`, 'success'); loadData(); }
+                } catch(err) {
+                    Swal.fire('ผิดพลาด', 'เกิดข้อผิดพลาดในการอ่านไฟล์', 'error');
                 }
-                const resData = await apiCall({ action: "uploadStudents", students: allStudents });
-                if(resData.status === 'success') { Swal.fire('สำเร็จ', `อัปเดตเรียบร้อย`, 'success'); loadData(); }
             };
             reader.readAsArrayBuffer(fileInput.files[0]);
         });
