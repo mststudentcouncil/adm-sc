@@ -138,7 +138,7 @@
                         <div class="col-md-12">
                             <label class="fw-bold mb-2">ชื่อพรรค <span class="text-danger">*</span></label>
                             
-                            <input type="text" id="partyNameText" class="form-control" placeholder="ระบุชื่อพรรค (บังคับตั้งชื่อใหม่)">
+                            <input type="text" id="partyNameText" class="form-control" placeholder="ระบุชื่อพรรค">
                             
                             <div class="input-group shadow-sm rounded-3 overflow-hidden" id="committeePartyContainer" style="display:none;">
                                 <select id="partyNameSelect" class="form-select border-0"><option value="" selected disabled>-- เลือกพรรคที่ต้องการสังกัด --</option></select>
@@ -147,6 +147,12 @@
                                     <label class="small fw-bold text-purple mb-0" for="isIndependent">ลงอิสระ</label>
                                 </div>
                             </div>
+                            
+                            <div id="partyHelpText" class="text-danger mt-2" style="display: none; font-size: 12px; font-weight: bold;">
+                                <svg class="inline-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; margin-top: -2px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                หากไม่มีชื่อพรรคของท่าน ให้หัวหน้าพรรคลงสมัคร "ประธานนักเรียน" ก่อน
+                            </div>
+
                         </div>
                         <div id="presidentOnlyInfo" class="col-12 row g-3 m-0 p-0" style="display: none;">
                             <div class="col-12 mt-3"><label class="fw-bold mb-1">สโลแกนพรรค <span class="text-danger">*</span></label><input type="text" id="partySlogan" class="form-control" placeholder="พิมพ์สโลแกนพรรค"></div>
@@ -311,7 +317,7 @@
                     if(availableParties.length > 0) {
                         pSelect.innerHTML = '<option value="" selected disabled>-- เลือกพรรคที่ต้องการสังกัด --</option>' + availableParties.map(p => `<option value="${p}">${p}</option>`).join('');
                     } else {
-                        pSelect.innerHTML = '<option value="" selected disabled>ยังไม่มีพรรคในระบบ (โปรดเลือกลงอิสระ)</option>';
+                        pSelect.innerHTML = '<option value="" selected disabled>ยังไม่มีพรรคในปีนี้ (ให้หัวหน้าพรรคสมัครก่อน หรือเลือกลงอิสระ)</option>';
                     }
 
                     document.getElementById('view-application').style.display = 'block';
@@ -342,12 +348,56 @@
             renderStatusView(stdId, appData, systemSettings);
         }
 
+        // 🟢 แก้ไขบัคการจัดคิว: ใช้ Object.entries เพื่อนำรหัสนักเรียน (Key) มาคำนวณด้วย
+        function getCalculatedQueue(targetStdId, appData) {
+            let match = String(appData.appNumber).match(/MSTSC(\d{2})/);
+            let currentYear = match ? match[1] : "";
+            
+            // ดึงค่ามาจาก appliedDB โดยดึง id (รหัสนักเรียน) มาแปะไว้ใน object ด้วย
+            let queuedApps = Object.entries(appliedDB)
+                .map(([id, data]) => {
+                    data.studentId = id; // สำคัญมาก: ใส่รหัสนักเรียนเข้าไปเพื่อใช้เรียงลำดับ
+                    return data;
+                })
+                .filter(a => {
+                    let isSameYear = false;
+                    if (currentYear && a.appNumber) {
+                        isSameYear = String(a.appNumber).includes('MSTSC' + currentYear);
+                    }
+                    
+                    let s = String(a.status || '').trim();
+                    // บังคับว่าต้องสถานะ "ยืนยันสมัครต่อ" หรือ "ผ่านการคัดเลือก" เท่านั้น
+                    let hasRightToInterview = (s === 'ยืนยันสมัครต่อ' || s === 'ผ่านการคัดเลือก');
+                    
+                    return isSameYear && hasRightToInterview;
+                });
+
+            // เรียงลำดับตามห้อง และรหัสนักเรียน (ให้ตรงกับหน้าแอดมิน)
+            queuedApps.sort((a, b) => {
+                let matchA = String(a.room).match(/\d+$/);
+                let roomA = matchA ? parseInt(matchA[0], 10) : 999;
+                
+                let matchB = String(b.room).match(/\d+$/);
+                let roomB = matchB ? parseInt(matchB[0], 10) : 999;
+                
+                if (roomA !== roomB) return roomA - roomB;
+                
+                return String(a.studentId).localeCompare(String(b.studentId));
+            });
+
+            // ค้นหาตำแหน่งคิวของนักเรียนที่กำลังล็อกอิน
+            let qIndex = queuedApps.findIndex(a => String(a.studentId) === String(targetStdId));
+            return qIndex !== -1 ? qIndex + 1 : null;
+        }
+
         function renderStatusView(stdId, appData, settings) {
             document.getElementById('view-status').style.display = 'block';
             const stu = onlineStudentDB[stdId] || {name: "ไม่ทราบชื่อ", room: "-"};
             const contentDiv = document.getElementById('statusContent');
             let now = new Date();
             let statusHtml = '';
+            
+            let calculatedQueue = getCalculatedQueue(stdId, appData);
             
             const svgWait = `<svg class="svg-icon text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
             const svgPass = `<svg class="svg-icon text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
@@ -359,16 +409,29 @@
                 if (now >= new Date(settings.ResultAnnounceTime)) isResultAnnounced = true;
             }
 
-            if (appData.status === 'หมดเวลาส่งใบสมัคร') {
+            let currentStatus = String(appData.status || '').trim();
+
+            if (currentStatus === 'หมดเวลาส่งใบสมัคร') {
                 statusHtml = `<div class="alert bg-danger-subtle text-center mt-4 py-4 rounded-4 shadow-sm border border-danger">${svgFail}<h5 class="fw-bold text-danger">หมดเวลาส่ง/แก้ไขใบสมัคร</h5><p class="mb-0 text-sm text-danger">คุณไม่มีสิทธิ์ได้รับการคัดเลือกอีก เนื่องจากพ้นกำหนดเวลา</p></div>`;
-            } else if ((appData.status === 'ผ่านการคัดเลือก' || appData.status === 'ไม่ผ่านการคัดเลือก') && !isResultAnnounced) {
+            } else if ((currentStatus === 'ผ่านการคัดเลือก' || currentStatus === 'ไม่ผ่านการคัดเลือก') && !isResultAnnounced) {
                 let annDateStr = settings.ResultAnnounceTime ? new Date(settings.ResultAnnounceTime).toLocaleString('th-TH') : '...';
                 statusHtml = `<div class="alert bg-info-subtle text-center mt-4 py-4 rounded-4 shadow-sm border border-info">${svgInfo}<h5 class="fw-bold text-info">รอประกาศผลการคัดเลือก</h5><p class="mb-0 text-sm">ในวันที่ ${annDateStr} น.</p></div>`;
-            } else if (appData.status === 'ผ่านการคัดเลือก') {
-                statusHtml = `<div class="alert bg-success-subtle text-center mt-4 py-4 rounded-4 shadow-sm border border-success">${svgPass}<h4 class="fw-bold text-success">ผ่านการคัดเลือก</h4><p class="mb-0 text-sm text-success">ขอแสดงความยินดี คุณผ่านการคัดเลือก</p></div>`;
-            } else if (appData.status === 'ไม่ผ่านการคัดเลือก') {
+            } else if (currentStatus === 'ผ่านการคัดเลือก') {
+                statusHtml = `<div class="alert bg-success-subtle text-center mt-4 py-4 rounded-4 shadow-sm border border-success">
+                    ${svgPass}
+                    <h4 class="fw-bold text-success">ผ่านการคัดเลือก</h4>
+                    <p class="mb-3 text-sm text-success">ขอแสดงความยินดี คุณผ่านการคัดเลือก</p>
+                    <div class="p-3 bg-white rounded-3 border border-success border-opacity-25 shadow-sm">
+                        <p class="mb-2 fw-bold text-dark" style="font-size: 13px;">ผู้ที่ผ่านการคัดเลือก ให้ขึ้นทะเบียนคณะกรรมการสภานักเรียน</p>
+                        <a href="https://reg-mstsc.pages.dev" target="_blank" class="btn btn-sm btn-success rounded-pill fw-bold px-4 py-2 shadow-sm d-inline-flex align-items-center gap-1">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            ผ่านลิงก์คลิกที่นี่
+                        </a>
+                    </div>
+                </div>`;
+            } else if (currentStatus === 'ไม่ผ่านการคัดเลือก') {
                 statusHtml = `<div class="alert bg-danger-subtle text-center mt-4 py-4 rounded-4 shadow-sm border border-danger">${svgFail}<h4 class="fw-bold text-danger">ไม่ผ่านการคัดเลือก</h4><p class="mb-0 text-sm text-danger">ขอขอบคุณที่ให้ความสนใจในการสมัครครั้งนี้</p></div>`;
-            } else if (appData.status === 'ส่งใบสมัครเรียบร้อย') {
+            } else if (currentStatus === 'ส่งใบสมัครเรียบร้อย') {
                 let canConfirm = false; let timeMsg = "";
                 const svgClock = `<svg class="inline-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
                 const svgBan = `<svg class="inline-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>`;
@@ -385,28 +448,26 @@
                 } else {
                     statusHtml = `<div class="alert bg-light border border-secondary text-center mt-4 py-4 rounded-4 shadow-sm"><h5 class="fw-bold text-dark">เอกสารสมบูรณ์</h5><p class="mb-0 text-sm">คุณมีสิทธิ์เข้ารับการสัมภาษณ์</p>${timeMsg}</div>`;
                 }
-            } else if (appData.status.includes('เอกสารไม่เรียบร้อย')) {
-                statusHtml = `<div class="alert bg-danger-subtle text-center mt-4 py-4 rounded-4 shadow-sm border border-danger">${svgFail}<h5 class="fw-bold text-danger">${appData.status}</h5><p class="mb-0 text-sm text-danger">โปรดติดต่อห้องสภานักเรียนโดยด่วน</p></div>`;
-            } else if(appData.status === 'ยืนยันสมัครต่อ') {
+            } else if (currentStatus.includes('เอกสารไม่เรียบร้อย')) {
+                statusHtml = `<div class="alert bg-danger-subtle text-center mt-4 py-4 rounded-4 shadow-sm border border-danger">${svgFail}<h5 class="fw-bold text-danger">${currentStatus}</h5><p class="mb-0 text-sm text-danger">โปรดติดต่อห้องสภานักเรียนโดยด่วน</p></div>`;
+            } else if(currentStatus === 'ยืนยันสมัครต่อ') {
                 statusHtml = `<div class="alert bg-success-subtle text-center mt-4 py-4 rounded-4 shadow-sm border border-success">${svgPass}<h4 class="fw-bold text-success">ยืนยันสิทธิ์เรียบร้อย</h4><p class="mb-0 text-sm text-success">คุณได้ยืนยันการเข้ารับการสัมภาษณ์แล้ว</p></div>`;
-            } else if(appData.status.includes('สละสิทธิ์')) {
-                statusHtml = `<div class="alert bg-light text-center mt-4 py-4 rounded-4 shadow-sm border border-secondary"><svg class="svg-icon text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg><h4 class="fw-bold text-secondary">${appData.status}</h4></div>`;
+            } else if(currentStatus.includes('สละสิทธิ์')) {
+                statusHtml = `<div class="alert bg-light text-center mt-4 py-4 rounded-4 shadow-sm border border-secondary"><svg class="svg-icon text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg><h4 class="fw-bold text-secondary">${currentStatus}</h4></div>`;
             } else {
-                statusHtml = `<div class="alert bg-light text-center mt-4 py-4 rounded-4 shadow-sm border">${svgWait}<h4 class="fw-bold text-dark">${appData.status}</h4><p class="mb-0 text-sm">หากสถานะเป็น "พิมพ์ใบสมัครแล้ว"<br>ให้มารับใบสมัครที่ห้องสภานักเรียน</p></div>`;
+                statusHtml = `<div class="alert bg-light text-center mt-4 py-4 rounded-4 shadow-sm border">${svgWait}<h4 class="fw-bold text-dark">${currentStatus}</h4><p class="mb-0 text-sm">หากสถานะเป็น "พิมพ์ใบสมัครแล้ว"<br>ให้มารับใบสมัครที่ห้องสภานักเรียน</p></div>`;
             }
 
             let queueHtml = '';
-            // 🚨 แก้ไขใหม่: ให้แสดงคิวเฉพาะคนที่สถานะ "ยืนยันสมัครต่อ" (กำลังรอสัมภาษณ์) เท่านั้น
-            // พอแอดมินเปลี่ยนสถานะเป็น "ผ่านการคัดเลือก" หรือ "ไม่ผ่านการคัดเลือก" คิวจะหายไปอัตโนมัติ
-            if (appData.status === 'ยืนยันสมัครต่อ' && settings.InterviewAnnounceTime) {
+            if (currentStatus === 'ยืนยันสมัครต่อ' && settings.InterviewAnnounceTime) {
                 if (now >= new Date(settings.InterviewAnnounceTime)) {
-                    if (appData.queueNumber) {
+                    if (calculatedQueue) {
                         let interviewDetails = "";
                         if(settings.InterviewStartTime) interviewDetails += `<div class="mb-2"><svg class="inline-svg" style="color:#93c5fd;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span class="small opacity-75">เริ่มสัมภาษณ์:</span> <b class="ms-1">${new Date(settings.InterviewStartTime).toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit'})} น.</b></div>`;
                         if(settings.InterviewLocation) interviewDetails += `<div class="mb-2"><svg class="inline-svg" style="color:#93c5fd;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> <span class="small opacity-75">สถานที่:</span> <b class="ms-1">${settings.InterviewLocation}</b></div>`;
                         if(settings.InterviewNote) interviewDetails += `<div class="mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.2);"><svg class="inline-svg" style="color:#fde047;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg> <b style="color:#fef08a;" class="small">ประกาศเพิ่มเติม:</b><br><span class="small" style="opacity:0.9;">${settings.InterviewNote.replace(/\n/g, '<br>')}</span></div>`;
 
-                        queueHtml = `<div class="mt-4 p-4 rounded-4 shadow-sm text-center text-white" style="background: linear-gradient(135deg, #1e40af, #3b82f6); border: 2px solid #93c5fd;"><h6 class="fw-bold mb-1" style="opacity: 0.85;">ลำดับคิวสัมภาษณ์ของคุณ</h6><div class="display-3 fw-bold font-monospace tracking-wide mb-3" style="color: #fde047; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">Q-${("00" + appData.queueNumber).slice(-3)}</div><div class="rounded-4 p-3 text-start" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15);">${interviewDetails}</div></div>`;
+                        queueHtml = `<div class="mt-4 p-4 rounded-4 shadow-sm text-center text-white" style="background: linear-gradient(135deg, #1e40af, #3b82f6); border: 2px solid #93c5fd;"><h6 class="fw-bold mb-1" style="opacity: 0.85;">ลำดับคิวสัมภาษณ์ของคุณ</h6><div class="display-3 fw-bold font-monospace tracking-wide mb-3" style="color: #fde047; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">Q-${("00" + calculatedQueue).slice(-3)}</div><div class="rounded-4 p-3 text-start" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15);">${interviewDetails}</div></div>`;
                     } else {
                         queueHtml = `<div class="alert alert-warning small fw-bold text-center mt-3 py-3 rounded-4 shadow-sm border-0"><br>ถึงเวลาประกาศคิวแล้ว<br><span class="text-warning-emphasis">กำลังรอแอดมินจัดเตรียมและอัปเดตคิวสัมภาษณ์...</span></div>`;
                     }
@@ -458,8 +519,8 @@
             const partyInputText = document.getElementById('partyNameText');
             const partySelectContainer = document.getElementById('committeePartyContainer');
             const partySelect = document.getElementById('partyNameSelect');
-            
-            // จัดการข้อมูลคุณสมบัติ
+            const partyHelpText = document.getElementById('partyHelpText'); 
+
             const qualSection = document.getElementById('qualificationSection');
             const qualList = document.getElementById('qualList');
 
@@ -468,6 +529,7 @@
                 partyInputText.required = true;
                 partySelectContainer.style.display = 'none';
                 partySelect.required = false;
+                if(partyHelpText) partyHelpText.style.display = 'none'; 
 
                 document.getElementById('presidentOnlyInfo').style.display = 'flex';
                 document.getElementById('partyMembersSection').style.display = 'block';
@@ -475,7 +537,6 @@
                 document.getElementById('partyPolicies').required = true;
                 if(memberCounter === 1) addMemberRow(); 
                 
-                // สคริปต์คุณสมบัติประธาน
                 qualList.innerHTML = `
                     <li>${svgIconsHTML.check} (1) เป็นนักเรียนโรงเรียนเมืองสุราษฎร์ธานีที่กำลังศึกษาในระดับชั้น ม.4</li>
                     <li>${svgIconsHTML.check} (2) มีผลการเรียนเฉลี่ยสะสม ม.4 เทอม 1 <b>ไม่ต่ำกว่า 3.00</b> และผ่านคุณลักษณะอันพึงประสงค์</li>
@@ -491,13 +552,13 @@
                 partyInputText.required = false;
                 partySelectContainer.style.display = 'flex';
                 partySelect.required = true;
+                if(partyHelpText) partyHelpText.style.display = 'block'; 
 
                 document.getElementById('presidentOnlyInfo').style.display = 'none';
                 document.getElementById('partyMembersSection').style.display = 'none';
                 document.getElementById('partySlogan').required = false;
                 document.getElementById('partyPolicies').required = false;
                 
-                // สคริปต์คุณสมบัติกรรมการ
                 qualList.innerHTML = `
                     <li>${svgIconsHTML.check} (1) เป็นนักเรียนโรงเรียนเมืองสุราษฎร์ธานีที่กำลังศึกษาในระดับชั้น ม.4</li>
                     <li>${svgIconsHTML.check} (2) มีผลการเรียนเฉลี่ยสะสม ม.4 เทอม 1 <b>ไม่ต่ำกว่า 2.50</b> และผ่านคุณลักษณะอันพึงประสงค์</li>
@@ -539,7 +600,6 @@
             container.appendChild(row);
             if(document.getElementById('roleSelect').value !== 'ประธานนักเรียน') { row.querySelectorAll('input').forEach(inp => inp.required = false); }
             
-            // ซ่อนปุ่มถ้าครบ 30 คน
             if (memberCounter >= 30) {
                 document.getElementById('addMemberBtn').style.display = 'none';
             }
