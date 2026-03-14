@@ -323,7 +323,7 @@
                     document.getElementById('view-application').style.display = 'block';
                 } else {
                     localStorage.removeItem('mstsc_std_login');
-                    Swal.fire('ไม่พบรายชื่อ', `รหัส ${stdId} ไม่อยู่ในฐานข้อมูล ม.4`, 'warning').then(() => location.reload());
+                    Swal.fire('ไม่มีสิทธิ์ใช้งานระบบ', `รหัสนักเรียน ${stdId} <br>ไม่ได้ศึกษาอยู่ชั้นมัธยมศึกษาปีที่ 4<br><br>หากคิดว่ามีข้อผิดพลาด<br>โปรดติดต่อห้องสภานักเรียน`, 'warning').then(() => location.reload());
                 }
             }
         }
@@ -439,7 +439,7 @@
                 if (settings.ConfirmStartTime && settings.ConfirmEndTime) {
                     let sDate = new Date(settings.ConfirmStartTime); let eDate = new Date(settings.ConfirmEndTime);
                     if (now < sDate) timeMsg = `<div class="text-secondary small fw-bold mt-3">${svgClock} ระบบเปิดให้ยืนยันสิทธิ์ในวันที่<br>${sDate.toLocaleString('th-TH')} น.</div>`;
-                    else if (now >= sDate && now <= eDate) { canConfirm = true; timeMsg = `<div class="text-danger small fw-bold mt-3">${svgClock} หมดเขตยืนยันสิทธิ์: ${eDate.toLocaleString('th-TH')} น.</div>`; }
+                    else if (now >= sDate && now <= eDate) { canConfirm = true; timeMsg = `<div class="text-danger small fw-bold mt-3">${svgClock} หมดเขตยืนยันสิทธิ์<br>${eDate.toLocaleString('th-TH')} น.</div>`; }
                     else timeMsg = `<div class="text-danger small fw-bold mt-3">${svgBan} หมดเวลายืนยันสิทธิ์แล้ว</div>`;
                 }
 

@@ -27,7 +27,7 @@
             <img src="https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png" class="w-24 mx-auto mb-6">
             <h2 class="text-2xl font-bold text-purple-900 mb-2">Admin Admission MSTSC</h2>
             <p class="text-red-500 font-bold text-sm mb-6 bg-red-50 py-2 rounded-lg border border-red-100">
-                คณะกรรมการสภานักเรียนเท่านั้นที่จะเข้าสู่ระบบนี้ได้
+                เฉพาะคณะกรรมการสภานักเรียนเท่านั้น
             </p>
             <div class="flex justify-center">
                 <div id="g_id_onload" data-client_id="151555458498-fjmti72kvokr5dh5mlsjqq7vugrduuef.apps.googleusercontent.com" data-callback="handleAdminLogin" data-auto_prompt="false"></div>
@@ -305,7 +305,7 @@
                     document.getElementById('adminDashboardView').style.display = 'block';
                     loadData();
                 } else {
-                    Swal.fire('ปฏิเสธการเข้าถึง', 'ใช้ได้เฉพาะอีเมล studentcouncil@mst.ac.th เท่านั้น', 'error');
+                    Swal.fire('ปฏิเสธการเข้าถึง', 'ใช้ได้เฉพาะผู้ดูแลระบบเท่านั้น', 'error');
                 }
             } catch(e) { Swal.fire('Error', 'ไม่สามารถยืนยันตัวตนได้', 'error'); }
         }
