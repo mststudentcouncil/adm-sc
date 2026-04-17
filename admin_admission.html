@@ -7,53 +7,27 @@
     <link rel="icon" type="image/png" href="https://i.postimg.cc/yxjxZmRN/Logo_mstsc_(1)_(1).png">
     <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
-    function checkInAppBrowser() {
-        var ua = navigator.userAgent || navigator.vendor || window.opera;
-        var isInApp = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || 
-                      (ua.indexOf("Instagram") > -1) || (ua.indexOf("Line") > -1) || 
-                      (ua.indexOf("LINE") > -1) || (ua.indexOf("TikTok") > -1);
-        
-        if(isInApp) {
-            const warningHTML = `
-                <div class="bg-purple-50 flex flex-col items-center justify-center min-h-screen p-6 text-center m-0 fixed inset-0 z-[999999]">
-                    <div class="bg-white p-8 rounded-[2rem] shadow-xl w-full max-w-sm flex flex-col items-center border border-purple-100">
-                        <div class="w-20 h-20 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center mb-6">
-                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                        </div>
-                        
-                        <h2 class="text-2xl font-extrabold text-gray-800 mb-3 tracking-tight">โปรดเปิดในเบราว์เซอร์</h2>
-                        <p class="text-gray-500 mb-8 text-sm leading-relaxed">
-                            ระบบไม่รองรับการลงชื่อเข้าใช้ผ่านแอปภายนอก<br><br>
-                            กรุณากดที่เมนู <b>(จุด 3 จุด)</b> มุมขวาบนหรือล่าง<br>
-                            แล้วเลือก <b class="text-purple-700">"เปิดในเบราว์เซอร์"</b><br>
-                            (Open in browser)
-                        </p>
-                        
-                        <button onclick="navigator.clipboard.writeText(window.location.href); alert('คัดลอกลิงก์แล้ว! นำไปวางใน Safari หรือ Chrome ได้เลย');" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-4 px-6 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                            คัดลอกลิงก์เว็บไซต์
-                        </button>
+        function checkInAppBrowser() {
+            var ua = navigator.userAgent || navigator.vendor || window.opera;
+            var isInApp = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || 
+                          (ua.indexOf("Instagram") > -1) || (ua.indexOf("Line") > -1) || 
+                          (ua.indexOf("LINE") > -1) || (ua.indexOf("TikTok") > -1);
+            
+            if(isInApp) {
+                document.write(`
+                    <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f3e8ff; z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; font-family:'Anuphan',sans-serif;">
+                        <svg style="width:80px; color:#673ab7; margin-bottom:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        <h2 style="color:#673ab7; font-weight:bold; margin-bottom:10px;">โปรดเปิดในเบราว์เซอร์หลัก</h2>
+                        <p style="color:#555; font-size:16px; margin-bottom:30px;">การเข้าสู่ระบบด้วย Google ไม่รองรับการเปิดผ่านแอป LINE, Facebook หรือ IG<br><br>กรุณากดที่เมนู <b>(จุด 3 จุด)</b> มุมขวาบน<br>แล้วเลือก <b>"เปิดในเบราว์เซอร์" (Open in browser)</b></p>
+                        <button onclick="navigator.clipboard.writeText(window.location.href); alert('คัดลอกลิงก์แล้ว! นำไปเปิดใน Safari หรือ Chrome ได้เลย');" style="background:#673ab7; color:white; border:none; padding:15px 30px; border-radius:30px; font-size:16px; font-weight:bold; box-shadow:0 4px 15px rgba(103,58,183,0.3);">คัดลอกลิงก์เว็บไซต์</button>
                     </div>
-                </div>
-            `;
-
-            // เช็คว่าหน้าเว็บมี body หรือยัง
-            if (document.body) {
-                document.body.innerHTML = warningHTML;
-                window.stop();
-            } else {
-                // ถ้ายืนยันว่ายังไม่มี ให้รอจนกว่าโครงสร้างเว็บจะโหลดเสร็จ
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.body.innerHTML = warningHTML;
-                    window.stop();
-                });
+                `);
+                document.close();
+                window.stop(); 
             }
         }
-    }
-    
-    // เรียกใช้งานฟังก์ชันทันที
-    checkInAppBrowser();
-</script>
+        checkInAppBrowser();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
